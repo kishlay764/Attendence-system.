@@ -1,0 +1,146 @@
+@model SmartAttendance.ViewModels.Reports.LowAttendanceReportViewModel
+@{
+    ViewData["Title"] = "Low Attendance Defaulters";
+}
+
+<!-- Print Header -->
+<div class="print-only-header">
+    <h3>Department of Computer Science & Engineering</h3>
+    <h4>Official Low Attendance Defaulter Notification List</h4>
+    <p>Configured Minimum Threshold: @Model.Threshold% | Generated on: @DateTime.Now.ToString("dd MMM yyyy HH:mm")</p>
+</div>
+
+<!-- Page Action Header -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 no-print">
+    <div>
+        <h3 class="fw-bold mb-1 text-danger d-flex align-items-center gap-2">
+            <i class="bi bi-shield-exclamation"></i> Low Attendance Defaulters List
+        </h3>
+        <p class="text-muted mb-0 small">Students with cumulative or subject attendance below the university threshold of <strong>@Model.Threshold%</strong></p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="ExportLowAttendanceCsv" 
+           asp-route-threshold="@Model.Threshold"
+           asp-route-classSectionId="@Model.ClassSectionId"
+           asp-route-subjectId="@Model.SubjectId"
+           class="btn btn-outline-danger bg-white d-flex align-items-center gap-2">
+            <i class="bi bi-file-earmark-arrow-down"></i> Export Defaulters CSV
+        </a>
+        <button type="button" class="btn btn-outline-secondary bg-white d-flex align-items-center gap-2" onclick="window.print()">
+            <i class="bi bi-printer"></i> Print Notice
+        </button>
+    </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="dashboard-card p-4 mb-4 no-print">
+    <form method="get" asp-action="LowAttendance">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label fw-semibold small text-secondary">Attendance Threshold (%)</label>
+                <div class="input-group">
+                    <input type="number" step="0.5" min="1" max="100" name="threshold" class="form-control" value="@Model.Threshold" />
+                    <span class="input-group-text bg-light">%</span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold small text-secondary">Class Section</label>
+                <select name="classSectionId" class="form-select" asp-items="ViewBag.ClassSections">
+                    <option value="">All Class Sections</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold small text-secondary">Curriculum Subject</label>
+                <select name="subjectId" class="form-select" asp-items="ViewBag.Subjects">
+                    <option value="">All Subjects</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-danger w-100 fw-semibold">
+                    <i class="bi bi-funnel-fill"></i> Filter
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Defaulters Table -->
+<div class="custom-table-container">
+    <div class="p-3 border-bottom bg-light d-flex justify-content-between align-items-center">
+        <div class="fw-bold text-danger">
+            Identified Defaulters: @Model.Defaulters.Count
+        </div>
+        <div class="small text-muted">
+            Formula Applied: [Present + (0.5 &times; Late)] &divide; Total &times; 100
+        </div>
+    </div>
+
+    @if (Model.Defaulters.Any())
+    {
+        <div class="table-responsive">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Roll No</th>
+                        <th>Student Name</th>
+                        <th>Contact</th>
+                        <th>Class Section</th>
+                        <th>Subject</th>
+                        <th class="text-center">Total</th>
+                        <th class="text-center">P / L / A</th>
+                        <th>Current Rate</th>
+                        <th class="text-end">Required to Reach @Model.Threshold%</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var d in Model.Defaulters)
+                    {
+                        <tr>
+                            <td class="fw-bold font-monospace text-primary">@d.RollNumber</td>
+                            <td>
+                                <div class="fw-bold">@d.StudentName</div>
+                            </td>
+                            <td class="small">
+                                <div><i class="bi bi-envelope text-muted"></i> @d.Email</div>
+                                @if (!string.IsNullOrEmpty(d.Phone))
+                                {
+                                    <div><i class="bi bi-telephone text-muted"></i> @d.Phone</div>
+                                }
+                            </td>
+                            <td>@d.ClassSectionName</td>
+                            <td>
+                                <span class="badge bg-light text-dark border font-monospace">@d.SubjectCode</span>
+                                <div class="small text-secondary">@d.SubjectName</div>
+                            </td>
+                            <td class="text-center fw-semibold">@d.TotalSessions</td>
+                            <td class="text-center small">
+                                <span class="badge bg-success bg-opacity-10 text-success me-1">@d.PresentSessions P</span>
+                                <span class="badge bg-warning bg-opacity-10 text-warning me-1">@d.LateSessions L</span>
+                                <span class="badge bg-danger bg-opacity-10 text-danger">@d.AbsentSessions A</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-danger fs-6 px-2 py-1">
+                                    @d.AttendancePercentage%
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <span class="badge bg-warning text-dark border fw-bold px-2 py-1">
+                                    +@d.ClassesNeededToReachThreshold Classes
+                                </span>
+                                <div class="text-muted" style="font-size: 0.72rem;">consecutive attendance</div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-shield-check text-success fs-1"></i>
+            <h5 class="fw-bold mt-3 text-success">No Defaulters Found!</h5>
+            <p class="text-muted small">All enrolled students have maintained attendance at or above @Model.Threshold%.</p>
+        </div>
+    }
+</div>

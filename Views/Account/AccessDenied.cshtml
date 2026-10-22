@@ -1,0 +1,22 @@
+@{
+    ViewData["Title"] = "Access Denied";
+}
+
+<div class="row justify-content-center my-5">
+    <div class="col-md-6 text-center">
+        <div class="dashboard-card p-5">
+            <div class="stat-icon-wrapper stat-icon-red mx-auto mb-4" style="width: 70px; height: 70px; font-size: 2.2rem;">
+                <i class="bi bi-shield-x"></i>
+            </div>
+            <h2 class="fw-bold mb-2">Access Denied</h2>
+            <p class="text-muted mb-4">
+                You do not possess the necessary authorization or role permissions to access this university resource.
+            </p>
+            <div class="d-flex justify-content-center gap-3">
+                <a asp-controller="Dashboard" asp-action="Index" class="btn btn-primary px-4 fw-semibold" style="background: var(--primary-700); border: none;">
+                    <i class="bi bi-house-door"></i> Return to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

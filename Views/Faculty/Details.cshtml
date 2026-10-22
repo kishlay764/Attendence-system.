@@ -1,0 +1,108 @@
+@model SmartAttendance.Models.Faculty
+@{
+    ViewData["Title"] = $"{Model.FullName} - Faculty Profile";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1">Faculty Academic Profile</h3>
+        <p class="text-muted mb-0 small">Faculty Code: <strong>@Model.FacultyCode</strong> • @Model.Designation</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary" style="background: var(--primary-700); border: none;">
+            <i class="bi bi-pencil"></i> Edit Profile
+        </a>
+        <a asp-action="Index" class="btn btn-outline-secondary bg-white">
+            <i class="bi bi-arrow-left"></i> Back to Directory
+        </a>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-4">
+        <div class="dashboard-card p-4 text-center">
+            <div class="user-avatar-circle mx-auto mb-3" style="width: 75px; height: 75px; font-size: 1.8rem;">
+                @(Model.FirstName.Length > 0 ? Model.FirstName[0].ToString() : "F")
+            </div>
+            <h4 class="fw-bold mb-1">@Model.FullName</h4>
+            <div class="font-monospace text-primary fw-bold mb-2">@Model.FacultyCode</div>
+            <span class="badge @(Model.IsActive ? "bg-success" : "bg-secondary") mb-4">
+                @(Model.IsActive ? "Active Faculty" : "Inactive")
+            </span>
+
+            <div class="list-group list-group-flush text-start small border-top">
+                <div class="list-group-item px-0 d-flex justify-content-between py-2">
+                    <span class="text-muted">Department:</span>
+                    <span class="fw-semibold">@Model.Department</span>
+                </div>
+                <div class="list-group-item px-0 d-flex justify-content-between py-2">
+                    <span class="text-muted">Designation:</span>
+                    <span class="fw-semibold">@Model.Designation</span>
+                </div>
+                <div class="list-group-item px-0 d-flex justify-content-between py-2">
+                    <span class="text-muted">Qualification:</span>
+                    <span class="fw-semibold">@(Model.Qualification ?? "N/A")</span>
+                </div>
+                <div class="list-group-item px-0 d-flex justify-content-between py-2">
+                    <span class="text-muted">Institutional Email:</span>
+                    <span class="fw-semibold">@Model.Email</span>
+                </div>
+                <div class="list-group-item px-0 d-flex justify-content-between py-2">
+                    <span class="text-muted">Contact Phone:</span>
+                    <span class="fw-semibold">@(Model.Phone ?? "N/A")</span>
+                </div>
+                <div class="list-group-item px-0 d-flex justify-content-between py-2">
+                    <span class="text-muted">Joining Date:</span>
+                    <span class="fw-semibold">@Model.JoiningDate.ToString("dd MMM yyyy")</span>
+                </div>
+                <div class="list-group-item px-0 d-flex justify-content-between py-2">
+                    <span class="text-muted">Sessions Logged:</span>
+                    <span class="fw-bold text-primary">@ViewBag.TotalRecordedSessions entries</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <!-- Assigned Subjects & Classes -->
+        <div class="dashboard-card p-4">
+            <h5 class="fw-bold mb-3">Teaching Allocations</h5>
+            @if (Model.Assignments.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 small">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Subject Code</th>
+                                <th>Subject Name</th>
+                                <th>Class Section</th>
+                                <th>Assigned Date</th>
+                                <th class="text-end">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var a in Model.Assignments)
+                            {
+                                <tr>
+                                    <td class="fw-bold font-monospace text-primary">@a.Subject?.Code</td>
+                                    <td>@a.Subject?.Name</td>
+                                    <td><span class="badge bg-light text-dark border">@a.ClassSection?.Name</span></td>
+                                    <td>@a.AssignedDate.ToString("dd MMM yyyy")</td>
+                                    <td class="text-end">
+                                        <span class="badge @(a.IsActive ? "bg-success" : "bg-secondary")">
+                                            @(a.IsActive ? "Active" : "Archived")
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted small mb-0">No active teaching allocations found.</p>
+            }
+        </div>
+    </div>
+</div>

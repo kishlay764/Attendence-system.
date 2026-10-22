@@ -1,0 +1,158 @@
+@model SmartAttendance.ViewModels.Reports.DailyAttendanceReportViewModel
+@{
+    ViewData["Title"] = "Daily Attendance Report";
+}
+
+<!-- Print Header for Physical Printouts -->
+<div class="print-only-header">
+    <h3>Department of Computer Science & Engineering</h3>
+    <h4>Smart Attendance Management System - Daily Session Report</h4>
+    <p>Report Date: @Model.Date.ToString("dddd, dd MMMM yyyy") | Section: @Model.ClassSectionName</p>
+</div>
+
+<!-- Page Action Header -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 no-print">
+    <div>
+        <h3 class="fw-bold mb-1">Daily Attendance Report</h3>
+        <p class="text-muted mb-0 small">Consolidated session-by-session attendance summary for <strong>@Model.Date.ToString("dd MMMM yyyy")</strong></p>
+    </div>
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-outline-secondary bg-white d-flex align-items-center gap-2" onclick="window.print()">
+            <i class="bi bi-printer"></i> Print Report
+        </button>
+    </div>
+</div>
+
+<!-- Date & Section Filter Bar -->
+<div class="dashboard-card p-4 mb-4 no-print">
+    <form method="get" asp-action="Daily">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label fw-semibold small text-secondary">Report Date</label>
+                <input type="date" name="date" class="form-control" value="@Model.Date.ToString("yyyy-MM-dd")" required />
+            </div>
+            <div class="col-md-5">
+                <label class="form-label fw-semibold small text-secondary">Class Section</label>
+                <select name="classSectionId" class="form-select" asp-items="ViewBag.ClassSections">
+                    <option value="">All Class Sections</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100 fw-semibold" style="background: var(--primary-700); border: none;">
+                    <i class="bi bi-search"></i> Generate
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Daily Aggregate Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-icon-wrapper stat-icon-blue">
+                <i class="bi bi-journal-check"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-label">Conducted Sessions</div>
+                <div class="stat-value">@Model.TotalRecordedSessions</div>
+                <div class="stat-subtitle text-muted">Sessions held today</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-icon-wrapper stat-icon-green">
+                <i class="bi bi-person-check-fill"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-label">Total Present</div>
+                <div class="stat-value text-success">@Model.TotalPresentCount</div>
+                <div class="stat-subtitle text-muted">Full attendance instances</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-icon-wrapper stat-icon-red">
+                <i class="bi bi-person-x-fill"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-label">Total Absentees</div>
+                <div class="stat-value text-danger">@Model.TotalAbsentCount</div>
+                <div class="stat-subtitle text-muted">Unattended student slots</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-icon-wrapper stat-icon-cyan">
+                <i class="bi bi-percent"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-label">Daily Average</div>
+                <div class="stat-value">@Model.OverallPercentage%</div>
+                <div class="stat-subtitle text-muted">Across all sessions</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sessions Breakdown Table -->
+<div class="custom-table-container">
+    <div class="p-3 border-bottom bg-light fw-bold text-secondary">
+        Class Session Roster - @Model.Date.ToString("dd MMMM yyyy")
+    </div>
+
+    @if (Model.Sessions.Any())
+    {
+        <div class="table-responsive">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Subject Code</th>
+                        <th>Subject Name</th>
+                        <th>Class Section</th>
+                        <th>Faculty In-Charge</th>
+                        <th class="text-center">Enrolled</th>
+                        <th class="text-center">Present</th>
+                        <th class="text-center">Absent</th>
+                        <th class="text-center">Late</th>
+                        <th class="text-end">Attendance Rate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in Model.Sessions)
+                    {
+                        <tr>
+                            <td class="fw-bold font-monospace text-primary">@s.SubjectCode</td>
+                            <td>@s.SubjectName</td>
+                            <td><span class="badge bg-light text-dark border">@s.ClassSectionName</span></td>
+                            <td>@s.FacultyName</td>
+                            <td class="text-center fw-semibold">@s.TotalEnrolled</td>
+                            <td class="text-center text-success fw-bold">@s.PresentCount</td>
+                            <td class="text-center text-danger fw-bold">@s.AbsentCount</td>
+                            <td class="text-center text-warning fw-bold">@s.LateCount</td>
+                            <td class="text-end">
+                                <span class="pct-badge @(s.AttendancePercentage >= 75 ? "pct-safe" : "pct-danger")">
+                                    @s.AttendancePercentage%
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-calendar-x text-muted fs-1"></i>
+            <h6 class="fw-bold mt-2">No Attendance Records Found for this Date</h6>
+            <p class="text-muted small">Select another date or make sure attendance has been submitted.</p>
+        </div>
+    }
+</div>

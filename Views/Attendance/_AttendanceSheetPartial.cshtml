@@ -1,0 +1,126 @@
+@model SmartAttendance.ViewModels.Attendance.MarkAttendanceViewModel
+
+@if (Model.Students.Any())
+{
+    <!-- Attendance Header & Status Summary Bar -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 p-3 bg-light rounded-3 border mb-3">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <h6 class="fw-bold mb-0">@Model.SubjectCode - @Model.SubjectName</h6>
+                <span class="badge bg-primary">@Model.ClassSectionName</span>
+                @if (Model.IsAlreadyMarked)
+                {
+                    <span class="badge bg-warning text-dark">
+                        <i class="bi bi-pencil"></i> Editing Existing Records
+                    </span>
+                }
+            </div>
+            <div class="text-muted small mt-1">
+                Date: <strong>@Model.Date.ToString("dddd, dd MMMM yyyy")</strong> • Total Students: <strong>@Model.Students.Count</strong>
+                @if (!string.IsNullOrEmpty(Model.RecordedByName))
+                {
+                    <span>• Originally Recorded By: <strong>@Model.RecordedByName</strong></span>
+                }
+            </div>
+        </div>
+
+        <!-- Quick "Mark All" controls & Live Counters -->
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            <div class="d-flex align-items-center gap-2">
+                <span class="small fw-semibold text-secondary">Quick Mark:</span>
+                <button type="button" class="btn btn-sm btn-outline-success" onclick="markAllStatus(1)">
+                    <i class="bi bi-check-all"></i> All Present
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="markAllStatus(2)">
+                    <i class="bi bi-x-circle"></i> All Absent
+                </button>
+            </div>
+
+            <div class="d-flex align-items-center gap-2 border-start ps-3">
+                <div class="badge bg-success py-1 px-2">P: <span id="countPresent">0</span></div>
+                <div class="badge bg-danger py-1 px-2">A: <span id="countAbsent">0</span></div>
+                <div class="badge bg-warning text-dark py-1 px-2">L: <span id="countLate">0</span></div>
+                <div class="badge bg-dark py-1 px-2">Live: <span id="liveAttendancePct">0%</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Attendance Marking Table -->
+    <div class="table-responsive border rounded-3 bg-white mb-4">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 60px;">#</th>
+                    <th style="width: 140px;">Roll No</th>
+                    <th>Student Name</th>
+                    <th style="width: 160px;">Cumulative Pct</th>
+                    <th style="width: 240px;" class="text-center">Attendance Status</th>
+                    <th>Remarks (Optional)</th>
+                </tr>
+            </thead>
+            <tbody id="studentAttendanceRows">
+                @for (int i = 0; i < Model.Students.Count; i++)
+                {
+                    var st = Model.Students[i];
+                    <tr data-student-id="@st.StudentId">
+                        <td class="text-muted small">@(i + 1)</td>
+                        <td class="fw-bold font-monospace text-primary">@st.RollNumber</td>
+                        <td>
+                            <div class="fw-semibold">@st.StudentName</div>
+                        </td>
+                        <td>
+                            <span class="pct-badge @(st.OverallAttendancePercentage >= 75 ? "pct-safe" : "pct-danger")">
+                                @st.OverallAttendancePercentage%
+                            </span>
+                            @if (st.OverallAttendancePercentage < 75 && st.OverallAttendancePercentage > 0)
+                            {
+                                <small class="text-danger ms-1" title="Low Attendance Defaulter"><i class="bi bi-exclamation-triangle-fill"></i></small>
+                            }
+                        </td>
+                        <td class="text-center">
+                            <div class="attendance-radio-group">
+                                <input type="radio" id="st_@(st.StudentId)_1" name="status_@(st.StudentId)" value="1" 
+                                       @(st.Status == SmartAttendance.Models.AttendanceStatus.Present ? "checked" : "") 
+                                       onchange="updateAttendanceCounters()" />
+                                <label for="st_@(st.StudentId)_1">Present</label>
+
+                                <input type="radio" id="st_@(st.StudentId)_2" name="status_@(st.StudentId)" value="2" 
+                                       @(st.Status == SmartAttendance.Models.AttendanceStatus.Absent ? "checked" : "") 
+                                       onchange="updateAttendanceCounters()" />
+                                <label for="st_@(st.StudentId)_2">Absent</label>
+
+                                <input type="radio" id="st_@(st.StudentId)_3" name="status_@(st.StudentId)" value="3" 
+                                       @(st.Status == SmartAttendance.Models.AttendanceStatus.Late ? "checked" : "") 
+                                       onchange="updateAttendanceCounters()" />
+                                <label for="st_@(st.StudentId)_3">Late</label>
+                            </div>
+                        </td>
+                        <td>
+                            <input type="text" class="form-control form-control-sm remarks-input" 
+                                   value="@st.Remarks" placeholder="e.g. Approved medical leave, arrived late" />
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Submit Action Button -->
+    <div class="d-flex justify-content-between align-items-center p-3 bg-white border rounded-3 shadow-sm">
+        <div class="text-muted small">
+            <i class="bi bi-shield-check text-success"></i> Server validation & anti-duplicate protection active.
+        </div>
+        <button type="button" id="btnSubmitAttendance" class="btn btn-primary px-4 py-2 fw-semibold d-flex align-items-center gap-2" 
+                style="background: var(--primary-700); border: none;">
+            <i class="bi bi-cloud-arrow-up-fill"></i> Save & Submit Attendance
+        </button>
+    </div>
+}
+else
+{
+    <div class="text-center py-5 dashboard-card">
+        <i class="bi bi-people text-muted fs-1"></i>
+        <h5 class="fw-bold mt-3 mb-1">No Students Found</h5>
+        <p class="text-muted small">No students are currently enrolled in this class section.</p>
+    </div>
+}

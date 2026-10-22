@@ -1,0 +1,42 @@
+@model ErrorViewModel
+@{
+    ViewData["Title"] = "Application Error";
+    int? code = ViewBag.StatusCode as int?;
+}
+
+<div class="row justify-content-center my-5">
+    <div class="col-md-7 text-center">
+        <div class="dashboard-card p-5">
+            <div class="stat-icon-wrapper stat-icon-amber mx-auto mb-4" style="width: 70px; height: 70px; font-size: 2.2rem;">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+            @if (code == 404)
+            {
+                <h2 class="fw-bold mb-2">404 - Page Not Found</h2>
+                <p class="text-muted mb-4">
+                    The requested resource or page could not be located on the server.
+                </p>
+            }
+            else
+            {
+                <h2 class="fw-bold mb-2">Application Notice</h2>
+                <p class="text-muted mb-4">
+                    An unexpected situation occurred while processing your request. Please retry or contact system administration.
+                </p>
+            }
+
+            @if (Model?.ShowRequestId == true)
+            {
+                <div class="alert alert-light border small text-muted font-monospace mb-4">
+                    Request ID: @Model.RequestId
+                </div>
+            }
+
+            <div class="d-flex justify-content-center gap-3">
+                <a asp-controller="Dashboard" asp-action="Index" class="btn btn-primary px-4 fw-semibold" style="background: var(--primary-700); border: none;">
+                    <i class="bi bi-house-door"></i> Return to Safety
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

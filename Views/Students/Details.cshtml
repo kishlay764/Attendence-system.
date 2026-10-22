@@ -1,0 +1,134 @@
+@model SmartAttendance.Models.Student
+@{
+    ViewData["Title"] = $"{Model.FullName} - Student Details";
+    double pct = (double)ViewBag.AttendancePercentage;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1">Student Academic Profile</h3>
+        <p class="text-muted mb-0 small">Roll: <strong>@Model.RollNumber</strong> • Reg: <strong>@Model.RegistrationNumber</strong></p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary" style="background: var(--primary-700); border: none;">
+            <i class="bi bi-pencil"></i> Edit Profile
+        </a>
+        <a asp-controller="Reports" asp-action="StudentWise" asp-route-studentId="@Model.Id" class="btn btn-outline-secondary bg-white">
+            <i class="bi bi-file-earmark-bar-graph"></i> Full Attendance Dossier
+        </a>
+        <a asp-action="Index" class="btn btn-outline-secondary bg-white">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-4">
+        <div class="dashboard-card p-4 text-center">
+            <div class="user-avatar-circle mx-auto mb-3" style="width: 75px; height: 75px; font-size: 1.8rem;">
+                @(Model.FirstName.Length > 0 ? Model.FirstName[0].ToString() : "S")
+            </div>
+            <h4 class="fw-bold mb-1">@Model.FullName</h4>
+            <div class="font-monospace text-primary fw-bold mb-2">@Model.RollNumber</div>
+            <span class="badge @(Model.IsActive ? "bg-success" : "bg-secondary") mb-4">
+                @(Model.IsActive ? "Active Student" : "Inactive")
+            </span>
+
+            <div class="list-group list-group-flush text-start small border-top">
+                <div class="list-group-item px-0 d-flex justify-content-between py-2">
+                    <span class="text-muted">Degree:</span>
+                    <span class="fw-semibold">@(Model.Course?.Code ?? "N/A")</span>
+                </div>
+                <div class="list-group-item px-0 d-flex justify-content-between py-2">
+                    <span class="text-muted">Section:</span>
+                    <span class="fw-semibold">@(Model.ClassSection?.Name ?? "Unassigned")</span>
+                </div>
+                <div class="list-group-item px-0 d-flex justify-content-between py-2">
+                    <span class="text-muted">Semester:</span>
+                    <span class="fw-semibold">Semester @Model.CurrentSemester</span>
+                </div>
+                <div class="list-group-item px-0 d-flex justify-content-between py-2">
+                    <span class="text-muted">Email:</span>
+                    <span class="fw-semibold">@Model.Email</span>
+                </div>
+                <div class="list-group-item px-0 d-flex justify-content-between py-2">
+                    <span class="text-muted">Phone:</span>
+                    <span class="fw-semibold">@(Model.Phone ?? "N/A")</span>
+                </div>
+                <div class="list-group-item px-0 d-flex justify-content-between py-2">
+                    <span class="text-muted">Admission:</span>
+                    <span class="fw-semibold">@Model.AdmissionDate.ToString("dd MMM yyyy")</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <!-- Attendance Stats Card -->
+        <div class="dashboard-card p-4 mb-4">
+            <h5 class="fw-bold mb-3">Attendance Standing</h5>
+            <div class="d-flex align-items-center justify-content-between p-3 rounded-3 mb-3 @(pct >= 75 ? "bg-success bg-opacity-10" : "bg-danger bg-opacity-10")">
+                <div>
+                    <span class="text-muted small">Cumulative Percentage</span>
+                    <div class="display-6 fw-bold @(pct >= 75 ? "text-success" : "text-danger")">
+                        @pct%
+                    </div>
+                </div>
+                <span class="badge @(pct >= 75 ? "bg-success" : "bg-danger") fs-6 px-3 py-2">
+                    @(pct >= 75 ? "Eligible" : "Defaulter (< 75%)")
+                </span>
+            </div>
+
+            <div class="row g-3 text-center">
+                <div class="col-3">
+                    <div class="border rounded p-2">
+                        <div class="text-muted small">Total Classes</div>
+                        <div class="fw-bold fs-5">@ViewBag.TotalClasses</div>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="border rounded p-2">
+                        <div class="text-muted small text-success">Present</div>
+                        <div class="fw-bold fs-5 text-success">@ViewBag.PresentClasses</div>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="border rounded p-2">
+                        <div class="text-muted small text-warning">Late</div>
+                        <div class="fw-bold fs-5 text-warning">@ViewBag.LateClasses</div>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="border rounded p-2">
+                        <div class="text-muted small text-danger">Absent</div>
+                        <div class="fw-bold fs-5 text-danger">@ViewBag.AbsentClasses</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Academic Enrollments -->
+        <div class="dashboard-card p-4">
+            <h5 class="fw-bold mb-3">Term Enrollments</h5>
+            @if (Model.Enrollments.Any())
+            {
+                <div class="list-group list-group-flush">
+                    @foreach (var e in Model.Enrollments)
+                    {
+                        <div class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-bold">@e.AcademicSemester?.Name (@e.AcademicSemester?.AcademicYear)</div>
+                                <div class="text-muted small">Enrolled on @e.EnrollmentDate.ToString("dd MMM yyyy")</div>
+                            </div>
+                            <span class="badge bg-light text-dark border">@e.ClassSection?.Name</span>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="text-muted small mb-0">No active term enrollment records.</p>
+            }
+        </div>
+    </div>
+</div>

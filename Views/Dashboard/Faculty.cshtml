@@ -1,0 +1,212 @@
+@model SmartAttendance.ViewModels.Dashboard.FacultyDashboardViewModel
+@{
+    ViewData["Title"] = "Faculty Portal";
+}
+
+<!-- Welcome Banner -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h3 class="fw-bold mb-1">Welcome back, @Model.FacultyName</h3>
+        <p class="text-muted mb-0 small">
+            <span class="badge bg-light text-dark border me-2">@Model.FacultyCode</span>
+            Department of @Model.Department
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-controller="Attendance" asp-action="Mark" class="quick-action-btn quick-action-primary">
+            <i class="bi bi-calendar-check-fill"></i> Mark Attendance Now
+        </a>
+    </div>
+</div>
+
+<!-- Faculty Metric Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-icon-wrapper stat-icon-blue">
+                <i class="bi bi-grid-fill"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-label">Assigned Sections</div>
+                <div class="stat-value">@Model.AssignedClassesCount</div>
+                <div class="stat-subtitle text-muted">Active classes</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-icon-wrapper stat-icon-cyan">
+                <i class="bi bi-book-fill"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-label">Teaching Subjects</div>
+                <div class="stat-value">@Model.AssignedSubjectsCount</div>
+                <div class="stat-subtitle text-muted">Allocated courses</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-icon-wrapper stat-icon-green">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-label">Enrolled Students</div>
+                <div class="stat-value">@Model.TotalEnrolledStudents</div>
+                <div class="stat-subtitle text-muted">In your sections</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-icon-wrapper stat-icon-amber">
+                <i class="bi bi-calendar-event"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-label">Active Modules</div>
+                <div class="stat-value">@Model.TodayClassesCount</div>
+                <div class="stat-subtitle text-muted">Course slots</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- My Assigned Classes & Quick Attendance Action -->
+<div class="dashboard-card p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h5 class="fw-bold mb-0">My Teaching Allocations & Today's Attendance</h5>
+            <small class="text-muted">Select a section to launch the fast attendance register</small>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        @if (Model.AssignedClasses.Any())
+        {
+            @foreach (var cls in Model.AssignedClasses)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="border rounded-3 p-3 bg-white h-100 d-flex flex-direction-column justify-content-between shadow-sm">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <span class="badge bg-primary bg-opacity-10 text-primary fw-bold font-monospace">@cls.SubjectCode</span>
+                                @if (cls.IsMarkedToday)
+                                {
+                                    <span class="badge bg-success bg-opacity-15 text-success">
+                                        <i class="bi bi-check-circle-fill"></i> Marked Today
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning bg-opacity-15 text-warning">
+                                        <i class="bi bi-clock"></i> Pending Today
+                                    </span>
+                                }
+                            </div>
+                            <h6 class="fw-bold mb-1">@cls.SubjectName</h6>
+                            <div class="text-muted small mb-2">
+                                <i class="bi bi-geo-alt"></i> @cls.ClassSectionName • @cls.RoomNumber
+                            </div>
+                            <div class="text-secondary small mb-3">
+                                <i class="bi bi-people"></i> @cls.EnrolledStudentCount Students Enrolled
+                            </div>
+                        </div>
+
+                        <div class="pt-2 border-top">
+                            <a asp-controller="Attendance" asp-action="Mark" 
+                               asp-route-classSectionId="@cls.ClassSectionId" 
+                               asp-route-subjectId="@cls.SubjectId" 
+                               class="btn btn-sm @(cls.IsMarkedToday ? "btn-outline-primary" : "btn-primary") w-100 fw-semibold">
+                                <i class="bi bi-pencil-square"></i> @(cls.IsMarkedToday ? "Review / Edit Attendance" : "Take Attendance")
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12 text-center py-4 text-muted">
+                <i class="bi bi-journal-x fs-2"></i>
+                <p class="mt-2 mb-0">No subject or class section allocations assigned yet.</p>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Subject Summaries & Recent Submissions -->
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="dashboard-card p-4 h-100">
+            <h5 class="fw-bold mb-3">Subject Attendance Summaries</h5>
+            @if (Model.SubjectSummaries.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 small">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Subject</th>
+                                <th>Section</th>
+                                <th>Conducted</th>
+                                <th class="text-end">Avg Attendance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var sub in Model.SubjectSummaries)
+                            {
+                                <tr>
+                                    <td>
+                                        <span class="fw-bold">@sub.SubjectCode</span>
+                                        <div class="text-muted" style="font-size: 0.75rem;">@sub.SubjectName</div>
+                                    </td>
+                                    <td>@sub.ClassSectionName</td>
+                                    <td>@sub.TotalSessions Sessions</td>
+                                    <td class="text-end">
+                                        <span class="pct-badge @(sub.AverageAttendance >= 75 ? "pct-safe" : "pct-danger")">
+                                            @sub.AverageAttendance%
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted small">No class session records found.</p>
+            }
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="dashboard-card p-4 h-100">
+            <h5 class="fw-bold mb-3">My Recent Attendance Submissions</h5>
+            @if (Model.RecentSubmissions.Any())
+            {
+                <div class="list-group list-group-flush">
+                    @foreach (var s in Model.RecentSubmissions)
+                    {
+                        <div class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-semibold" style="font-size: 0.9rem;">@s.SubjectCode (@s.ClassSection)</div>
+                                <div class="text-muted" style="font-size: 0.75rem;">@s.Date.ToString("ddd, dd MMM yyyy")</div>
+                            </div>
+                            <div class="text-end">
+                                <span class="pct-badge @(s.Percentage >= 75 ? "pct-safe" : "pct-danger")">@s.Percentage%</span>
+                                <div class="text-muted" style="font-size: 0.75rem;">@s.PresentCount P / @s.AbsentCount A</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="text-muted small">No recent attendance recorded.</p>
+            }
+        </div>
+    </div>
+</div>

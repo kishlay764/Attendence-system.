@@ -1,0 +1,264 @@
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@{
+    var isAuthenticated = SignInManager.IsSignedIn(User);
+    ApplicationUser? currentUser = null;
+    string userRole = "";
+    string initials = "U";
+    if (isAuthenticated)
+    {
+        currentUser = await UserManager.GetUserAsync(User);
+        var roles = currentUser != null ? await UserManager.GetRolesAsync(currentUser) : new List<string>();
+        userRole = roles.Count > 0 ? roles[0] : (currentUser?.UserRole ?? "User");
+        if (!string.IsNullOrEmpty(currentUser?.FullName))
+        {
+            var parts = currentUser.FullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            initials = parts.Length > 1 ? $"{parts[0][0]}{parts[1][0]}" : $"{parts[0][0]}";
+        }
+    }
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Smart Attendance System</title>
+
+    <!-- Bootstrap 5 & Custom CSS -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <!-- Custom Design System -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    @if (isAuthenticated)
+    {
+        <div class="app-wrapper">
+            <!-- Sidebar Navigation -->
+            <aside class="app-sidebar" id="appSidebar">
+                <div class="sidebar-header">
+                    <a asp-controller="Dashboard" asp-action="Index" class="brand-logo">
+                        <div class="brand-icon-box">
+                            <i class="bi bi-mortarboard-fill"></i>
+                        </div>
+                        <div>
+                            <div style="font-size: 1.05rem; font-weight: 800; letter-spacing: -0.02em;">SmartAttend</div>
+                            <div style="font-size: 0.68rem; color: #94a3b8; font-weight: 500;">University Portal</div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="sidebar-nav">
+                    <div class="nav-section-title">Navigation</div>
+                    
+                    @if (userRole == "Admin")
+                    {
+                        <a asp-controller="Dashboard" asp-action="Admin" class="nav-item-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Dashboard" ? "active" : "")">
+                            <i class="bi bi-speedometer2"></i>
+                            <span>Admin Dashboard</span>
+                        </a>
+                        <a asp-controller="Attendance" asp-action="Mark" class="nav-item-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Attendance" && ViewContext.RouteData.Values["Action"]?.ToString() == "Mark" ? "active" : "")">
+                            <i class="bi bi-check2-circle"></i>
+                            <span>Mark Attendance</span>
+                        </a>
+                        <a asp-controller="Attendance" asp-action="History" class="nav-item-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Attendance" && ViewContext.RouteData.Values["Action"]?.ToString() == "History" ? "active" : "")">
+                            <i class="bi bi-clock-history"></i>
+                            <span>Attendance History</span>
+                        </a>
+
+                        <div class="nav-section-title">Analytics & Reports</div>
+                        <a asp-controller="Reports" asp-action="Daily" class="nav-item-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reports" && ViewContext.RouteData.Values["Action"]?.ToString() == "Daily" ? "active" : "")">
+                            <i class="bi bi-file-earmark-bar-graph"></i>
+                            <span>Daily Reports</span>
+                        </a>
+                        <a asp-controller="Reports" asp-action="SubjectWise" class="nav-item-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reports" && ViewContext.RouteData.Values["Action"]?.ToString() == "SubjectWise" ? "active" : "")">
+                            <i class="bi bi-diagram-3"></i>
+                            <span>Subject Reports</span>
+                        </a>
+                        <a asp-controller="Reports" asp-action="LowAttendance" class="nav-item-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reports" && ViewContext.RouteData.Values["Action"]?.ToString() == "LowAttendance" ? "active" : "")">
+                            <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+                            <span>Defaulters (&lt; 75%)</span>
+                        </a>
+
+                        <div class="nav-section-title">Institutional Management</div>
+                        <a asp-controller="Students" asp-action="Index" class="nav-item-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Students" ? "active" : "")">
+                            <i class="bi bi-people-fill"></i>
+                            <span>Students</span>
+                        </a>
+                        <a asp-controller="Faculty" asp-action="Index" class="nav-item-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Faculty" ? "active" : "")">
+                            <i class="bi bi-person-badge-fill"></i>
+                            <span>Faculty Directory</span>
+                        </a>
+                        <a asp-controller="Academic" asp-action="Courses" class="nav-item-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Academic" && ViewContext.RouteData.Values["Action"]?.ToString() == "Courses" ? "active" : "")">
+                            <i class="bi bi-journal-bookmark-fill"></i>
+                            <span>Courses</span>
+                        </a>
+                        <a asp-controller="Academic" asp-action="Subjects" class="nav-item-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Academic" && ViewContext.RouteData.Values["Action"]?.ToString() == "Subjects" ? "active" : "")">
+                            <i class="bi bi-book-half"></i>
+                            <span>Subjects</span>
+                        </a>
+                        <a asp-controller="Academic" asp-action="Sections" class="nav-item-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Academic" && ViewContext.RouteData.Values["Action"]?.ToString() == "Sections" ? "active" : "")">
+                            <i class="bi bi-grid-3x3-gap-fill"></i>
+                            <span>Class Sections</span>
+                        </a>
+                        <a asp-controller="Academic" asp-action="FacultyAssignments" class="nav-item-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Academic" && ViewContext.RouteData.Values["Action"]?.ToString() == "FacultyAssignments" ? "active" : "")">
+                            <i class="bi bi-person-lines-fill"></i>
+                            <span>Faculty Allocations</span>
+                        </a>
+                        <a asp-controller="Academic" asp-action="Semesters" class="nav-item-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Academic" && ViewContext.RouteData.Values["Action"]?.ToString() == "Semesters" ? "active" : "")">
+                            <i class="bi bi-calendar3"></i>
+                            <span>Academic Terms</span>
+                        </a>
+                    }
+                    else if (userRole == "Faculty")
+                    {
+                        <a asp-controller="Dashboard" asp-action="Faculty" class="nav-item-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Dashboard" ? "active" : "")">
+                            <i class="bi bi-speedometer2"></i>
+                            <span>Faculty Dashboard</span>
+                        </a>
+                        <a asp-controller="Attendance" asp-action="Mark" class="nav-item-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Attendance" && ViewContext.RouteData.Values["Action"]?.ToString() == "Mark" ? "active" : "")">
+                            <i class="bi bi-check2-circle"></i>
+                            <span>Take Attendance</span>
+                        </a>
+                        <a asp-controller="Attendance" asp-action="History" class="nav-item-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Attendance" && ViewContext.RouteData.Values["Action"]?.ToString() == "History" ? "active" : "")">
+                            <i class="bi bi-clock-history"></i>
+                            <span>Attendance History</span>
+                        </a>
+
+                        <div class="nav-section-title">Reports</div>
+                        <a asp-controller="Reports" asp-action="Daily" class="nav-item-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reports" && ViewContext.RouteData.Values["Action"]?.ToString() == "Daily" ? "active" : "")">
+                            <i class="bi bi-calendar-event"></i>
+                            <span>Daily Sessions</span>
+                        </a>
+                        <a asp-controller="Reports" asp-action="SubjectWise" class="nav-item-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reports" && ViewContext.RouteData.Values["Action"]?.ToString() == "SubjectWise" ? "active" : "")">
+                            <i class="bi bi-diagram-3"></i>
+                            <span>Subject Breakdown</span>
+                        </a>
+                        <a asp-controller="Reports" asp-action="LowAttendance" class="nav-item-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reports" && ViewContext.RouteData.Values["Action"]?.ToString() == "LowAttendance" ? "active" : "")">
+                            <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+                            <span>Low Attendance (&lt; 75%)</span>
+                        </a>
+                    }
+                    else if (userRole == "Student")
+                    {
+                        <a asp-controller="Dashboard" asp-action="Student" class="nav-item-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Dashboard" ? "active" : "")">
+                            <i class="bi bi-speedometer2"></i>
+                            <span>My Dashboard</span>
+                        </a>
+                        <a asp-controller="Reports" asp-action="StudentWise" class="nav-item-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reports" && ViewContext.RouteData.Values["Action"]?.ToString() == "StudentWise" ? "active" : "")">
+                            <i class="bi bi-file-earmark-text"></i>
+                            <span>My Attendance Log</span>
+                        </a>
+                        <a asp-controller="Account" asp-action="Profile" class="nav-item-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Account" ? "active" : "")">
+                            <i class="bi bi-person-circle"></i>
+                            <span>My Academic Profile</span>
+                        </a>
+                    }
+                </div>
+
+                <div class="sidebar-footer">
+                    <div class="user-mini-card">
+                        <div class="user-avatar-circle">
+                            @initials
+                        </div>
+                        <div class="user-mini-info">
+                            <div class="user-mini-name">@(currentUser?.FullName ?? "User")</div>
+                            <div class="user-mini-role">@userRole Account</div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content Container -->
+            <div class="app-main">
+                <!-- Top Header Navbar -->
+                <header class="app-header">
+                    <div class="header-left">
+                        <button type="button" class="sidebar-toggle-btn" id="sidebarToggle" aria-label="Toggle Navigation">
+                            <i class="bi bi-list"></i>
+                        </button>
+                        <div class="page-breadcrumb d-none d-md-block">
+                            <span>Smart Attendance</span> / <strong>@ViewData["Title"]</strong>
+                        </div>
+                    </div>
+
+                    <div class="header-right">
+                        <span class="role-badge role-badge-@userRole">@userRole</span>
+
+                        <div class="dropdown">
+                            <button class="btn btn-light d-flex align-items-center gap-2 border" type="button" id="userMenuDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="border-radius: var(--radius-sm); padding: 0.4rem 0.8rem;">
+                                <div class="user-avatar-circle" style="width: 28px; height: 28px; font-size: 0.75rem;">
+                                    @initials
+                                </div>
+                                <span class="d-none d-sm-inline fw-semibold" style="font-size: 0.88rem;">@(currentUser?.FullName?.Split(' ')[0] ?? "User")</span>
+                                <i class="bi bi-chevron-down text-muted" style="font-size: 0.75rem;"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="userMenuDropdown" style="min-width: 200px; border-radius: var(--radius-sm); border-color: var(--border-color);">
+                                <li class="px-3 py-2 border-bottom">
+                                    <div class="fw-bold" style="font-size: 0.88rem;">@(currentUser?.FullName ?? "User")</div>
+                                    <div class="text-muted" style="font-size: 0.75rem;">@(currentUser?.Email ?? "")</div>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item py-2 d-flex align-items-center gap-2" asp-controller="Account" asp-action="Profile">
+                                        <i class="bi bi-person text-primary"></i> Profile & Security
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider my-1"></li>
+                                <li>
+                                    <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="dropdown-item py-2 d-flex align-items-center gap-2 text-danger">
+                                            <i class="bi bi-box-arrow-right"></i> Sign Out
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- App Main Body -->
+                <main class="app-content">
+                    <!-- Global Notification Banners -->
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2 shadow-sm border-0" role="alert" style="border-radius: var(--radius-sm);">
+                            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                            <div>@TempData["SuccessMessage"]</div>
+                            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center gap-2 shadow-sm border-0" role="alert" style="border-radius: var(--radius-sm);">
+                            <i class="bi bi-exclamation-triangle-fill text-danger fs-5"></i>
+                            <div>@TempData["ErrorMessage"]</div>
+                            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    @RenderBody()
+                </main>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Non-authenticated view (e.g. Login, Access Denied, Errors) -->
+        <main role="main">
+            @RenderBody()
+        </main>
+    }
+
+    <!-- Core Scripts -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js for interactive analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

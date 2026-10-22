@@ -1,0 +1,227 @@
+@model SmartAttendance.ViewModels.Reports.StudentWiseReportViewModel
+@{
+    ViewData["Title"] = "Student Attendance Dossier";
+    var isStudent = User.IsInRole("Student");
+}
+
+<!-- Print Header -->
+<div class="print-only-header">
+    <h3>Department of Computer Science & Engineering</h3>
+    <h4>Official Student Attendance Dossier</h4>
+    <p>Student: @Model.StudentName (@Model.RollNumber) | Class: @Model.ClassSectionName | Course: @Model.CourseName</p>
+</div>
+
+<!-- Header & Controls -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 no-print">
+    <div>
+        <h3 class="fw-bold mb-1">Student Attendance Dossier</h3>
+        <p class="text-muted mb-0 small">Comprehensive academic attendance history and subject ledger.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-outline-secondary bg-white d-flex align-items-center gap-2" onclick="window.print()">
+            <i class="bi bi-printer"></i> Print Dossier
+        </button>
+    </div>
+</div>
+
+<!-- Student Selector (For Faculty & Admin only) -->
+@if (!isStudent && ViewBag.Students != null)
+{
+    <div class="dashboard-card p-4 mb-4 no-print">
+        <form method="get" asp-action="StudentWise">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold small text-secondary">Select Student</label>
+                    <select name="studentId" class="form-select" asp-items="ViewBag.Students">
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold small text-secondary">From Date</label>
+                    <input type="date" name="startDate" class="form-control" value="@(Model.StartDate?.ToString("yyyy-MM-dd"))" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold small text-secondary">To Date</label>
+                    <input type="date" name="endDate" class="form-control" value="@(Model.EndDate?.ToString("yyyy-MM-dd"))" />
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100 fw-semibold" style="background: var(--primary-700); border: none;">
+                        <i class="bi bi-arrow-repeat"></i> Load Dossier
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+}
+
+<!-- Student Profile & Cumulative Metric Card -->
+<div class="dashboard-card p-4 mb-4">
+    <div class="row align-items-center g-3">
+        <div class="col-md-8">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <h4 class="fw-bold mb-0">@Model.StudentName</h4>
+                <span class="badge bg-light text-dark border font-monospace fs-6">@Model.RollNumber</span>
+            </div>
+            <div class="text-muted small">
+                <div>Enrolled Course: <strong>@Model.CourseName</strong></div>
+                <div>Class Section: <strong>@Model.ClassSectionName</strong> (Semester @Model.CurrentSemester)</div>
+            </div>
+        </div>
+
+        <div class="col-md-4 text-md-end">
+            <span class="text-muted small">Cumulative Attendance</span>
+            <div class="display-6 fw-bold @(Model.OverallPercentage >= 75 ? "text-success" : "text-danger")">
+                @Model.OverallPercentage%
+            </div>
+            @if (Model.OverallPercentage < 75 && Model.TotalClassesOverall > 0)
+            {
+                <span class="badge bg-danger">
+                    <i class="bi bi-exclamation-triangle-fill"></i> DEFAULTER (&lt; 75%)
+                </span>
+            }
+            else
+            {
+                <span class="badge bg-success">
+                    <i class="bi bi-check-circle-fill"></i> Satisfactory Standing
+                </span>
+            }
+        </div>
+    </div>
+
+    <!-- Quick Stats Breakdown -->
+    <div class="row g-2 pt-3 mt-3 border-top text-center">
+        <div class="col-3">
+            <div class="text-muted small">Total Held</div>
+            <div class="fw-bold fs-5">@Model.TotalClassesOverall</div>
+        </div>
+        <div class="col-3">
+            <div class="text-muted small">Present</div>
+            <div class="fw-bold fs-5 text-success">@Model.TotalPresentOverall</div>
+        </div>
+        <div class="col-3">
+            <div class="text-muted small">Late (0.5x)</div>
+            <div class="fw-bold fs-5 text-warning">@Model.TotalLateOverall</div>
+        </div>
+        <div class="col-3">
+            <div class="text-muted small">Absent</div>
+            <div class="fw-bold fs-5 text-danger">@Model.TotalAbsentOverall</div>
+        </div>
+    </div>
+</div>
+
+<!-- Subject Breakdown Ledger -->
+<div class="custom-table-container mb-4">
+    <div class="p-3 border-bottom bg-light fw-bold text-secondary">
+        Subject Attendance Ledger
+    </div>
+
+    @if (Model.SubjectStats.Any())
+    {
+        <div class="table-responsive">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Subject Code</th>
+                        <th>Subject Name</th>
+                        <th class="text-center">Total Sessions</th>
+                        <th class="text-center">Present</th>
+                        <th class="text-center">Late</th>
+                        <th class="text-center">Absent</th>
+                        <th>Attendance Rate</th>
+                        <th class="text-end">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in Model.SubjectStats)
+                    {
+                        <tr>
+                            <td class="fw-bold font-monospace text-primary">@s.SubjectCode</td>
+                            <td>@s.SubjectName</td>
+                            <td class="text-center">@s.TotalHeld</td>
+                            <td class="text-center text-success fw-bold">@s.Present</td>
+                            <td class="text-center text-warning fw-bold">@s.Late</td>
+                            <td class="text-center text-danger fw-bold">@s.Absent</td>
+                            <td style="min-width: 140px;">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="progress flex-grow-1" style="height: 6px;">
+                                        <div class="progress-bar @(s.Percentage >= 75 ? "bg-success" : "bg-danger")" 
+                                             style="width: @s.Percentage%"></div>
+                                    </div>
+                                    <span class="small fw-bold @(s.Percentage >= 75 ? "text-success" : "text-danger")">
+                                        @s.Percentage%
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                @if (s.IsLow)
+                                {
+                                    <span class="badge bg-danger">Defaulter</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">Eligible</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<!-- Detailed Date-by-Date Activity Timeline -->
+<div class="custom-table-container">
+    <div class="p-3 border-bottom bg-light fw-bold text-secondary">
+        Date-by-Date Attendance Timeline
+    </div>
+
+    @if (Model.DetailedRecords.Any())
+    {
+        <div class="table-responsive">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Subject Code</th>
+                        <th>Subject Name</th>
+                        <th>Status</th>
+                        <th>Faculty / In-Charge</th>
+                        <th>Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.DetailedRecords)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@r.Date.ToString("ddd, dd MMM yyyy")</td>
+                            <td><span class="badge bg-light text-dark border font-monospace">@r.SubjectCode</span></td>
+                            <td>@r.SubjectName</td>
+                            <td>
+                                @if (r.Status == SmartAttendance.Models.AttendanceStatus.Present)
+                                {
+                                    <span class="status-badge status-badge-present"><i class="bi bi-check-circle-fill"></i> Present</span>
+                                }
+                                else if (r.Status == SmartAttendance.Models.AttendanceStatus.Absent)
+                                {
+                                    <span class="status-badge status-badge-absent"><i class="bi bi-x-circle-fill"></i> Absent</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-badge-late"><i class="bi bi-clock-fill"></i> Late</span>
+                                }
+                            </td>
+                            <td class="small text-muted">@r.FacultyName</td>
+                            <td class="small text-muted">@(string.IsNullOrEmpty(r.Remarks) ? "-" : r.Remarks)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-4 text-muted">
+            <p class="mb-0">No attendance entries recorded for this timeline.</p>
+        </div>
+    }
+</div>

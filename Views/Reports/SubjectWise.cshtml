@@ -1,0 +1,163 @@
+@model SmartAttendance.ViewModels.Reports.SubjectWiseReportViewModel
+@{
+    ViewData["Title"] = "Subject Attendance Report";
+}
+
+<!-- Print Header -->
+<div class="print-only-header">
+    <h3>Department of Computer Science & Engineering</h3>
+    <h4>Subject-Wise Attendance Ledger</h4>
+    <p>Subject: @Model.SubjectCode - @Model.SubjectName | Section: @Model.ClassSectionName | Sessions: @Model.TotalSessionsConducted</p>
+</div>
+
+<!-- Page Action Header -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 no-print">
+    <div>
+        <h3 class="fw-bold mb-1">Subject Attendance Ledger</h3>
+        <p class="text-muted mb-0 small">Student-by-student cumulative performance in a specific curriculum subject.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-outline-secondary bg-white d-flex align-items-center gap-2" onclick="window.print()">
+            <i class="bi bi-printer"></i> Print Ledger
+        </button>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="dashboard-card p-4 mb-4 no-print">
+    <form method="get" asp-action="SubjectWise">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label fw-semibold small text-secondary">Subject</label>
+                <select name="subjectId" class="form-select" asp-items="ViewBag.Subjects" required>
+                    <option value="">-- Choose Subject --</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold small text-secondary">Class Section</label>
+                <select name="classSectionId" class="form-select" asp-items="ViewBag.ClassSections">
+                    <option value="">All Class Sections</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold small text-secondary">Start Date</label>
+                <input type="date" name="startDate" class="form-control" value="@(Model.StartDate?.ToString("yyyy-MM-dd"))" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold small text-secondary">End Date</label>
+                <input type="date" name="endDate" class="form-control" value="@(Model.EndDate?.ToString("yyyy-MM-dd"))" />
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100 fw-semibold" style="background: var(--primary-700); border: none;">
+                    <i class="bi bi-filter"></i> Generate
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+@if (Model.SubjectId.HasValue)
+{
+    <!-- Subject Summary Ribbon -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="dashboard-card p-3">
+                <span class="text-muted small">Target Subject</span>
+                <h5 class="fw-bold mb-0">@Model.SubjectCode - @Model.SubjectName</h5>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="dashboard-card p-3">
+                <span class="text-muted small">Total Sessions Conducted</span>
+                <h5 class="fw-bold mb-0">@Model.TotalSessionsConducted Sessions</h5>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="dashboard-card p-3">
+                <span class="text-muted small">Subject Average Attendance</span>
+                <h5 class="fw-bold mb-0 @(Model.AverageAttendanceRate >= 75 ? "text-success" : "text-danger")">
+                    @Model.AverageAttendanceRate%
+                </h5>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Attendance List -->
+    <div class="custom-table-container">
+        <div class="p-3 border-bottom bg-light fw-bold text-secondary d-flex justify-content-between align-items-center">
+            <span>Student Performance Register</span>
+            <span class="small text-muted font-monospace">75% Min. Required</span>
+        </div>
+
+        @if (Model.StudentRows.Any())
+        {
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Roll Number</th>
+                            <th>Student Name</th>
+                            <th class="text-center">Classes Held</th>
+                            <th class="text-center">Present</th>
+                            <th class="text-center">Late</th>
+                            <th class="text-center">Absent</th>
+                            <th>Attendance %</th>
+                            <th class="text-end">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in Model.StudentRows)
+                        {
+                            <tr>
+                                <td class="fw-bold font-monospace text-primary">@row.RollNumber</td>
+                                <td class="fw-semibold">@row.StudentName</td>
+                                <td class="text-center">@row.TotalClassesHeld</td>
+                                <td class="text-center text-success fw-bold">@row.PresentCount</td>
+                                <td class="text-center text-warning fw-bold">@row.LateCount</td>
+                                <td class="text-center text-danger fw-bold">@row.AbsentCount</td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2" style="min-width: 140px;">
+                                        <div class="progress flex-grow-1" style="height: 6px;">
+                                            <div class="progress-bar @(row.AttendancePercentage >= 75 ? "bg-success" : "bg-danger")" 
+                                                 style="width: @row.AttendancePercentage%"></div>
+                                        </div>
+                                        <span class="small fw-bold @(row.AttendancePercentage >= 75 ? "text-success" : "text-danger")">
+                                            @row.AttendancePercentage%
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="text-end">
+                                    @if (row.IsBelowThreshold)
+                                    {
+                                        <span class="badge bg-danger">
+                                            <i class="bi bi-exclamation-triangle"></i> Defaulter
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">Eligible</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-people fs-2"></i>
+                <p class="mt-2 mb-0">No student attendance records recorded for this subject in the specified interval.</p>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="text-center py-5 dashboard-card">
+        <i class="bi bi-diagram-3 text-primary fs-1"></i>
+        <h5 class="fw-bold mt-3 mb-1">Select a Subject</h5>
+        <p class="text-muted small">Please choose a curriculum subject from the dropdown above to view the attendance report.</p>
+    </div>
+}

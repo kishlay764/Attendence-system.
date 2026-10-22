@@ -1,0 +1,136 @@
+@model SmartAttendance.ViewModels.Account.LoginViewModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "University Portal Login";
+}
+
+<div class="login-page-body">
+    <div class="login-glass-card">
+        <!-- Left Branding Panel -->
+        <div class="login-left-panel">
+            <div>
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div class="brand-icon-box" style="width: 48px; height: 48px; font-size: 1.5rem;">
+                        <i class="bi bi-mortarboard-fill"></i>
+                    </div>
+                    <div>
+                        <h3 class="mb-0 fw-bold tracking-tight text-white">SmartAttend</h3>
+                        <small class="text-blue-200 opacity-75">Integrated Attendance Cloud</small>
+                    </div>
+                </div>
+
+                <div class="my-5">
+                    <h2 class="display-6 fw-bold mb-3 text-white">Automated, Audited & Accurate.</h2>
+                    <p class="text-white-50 leading-relaxed">
+                        Department of Computer Science & Engineering. Empowering faculty, students, and administration with real-time analytics and attendance governance.
+                    </p>
+                </div>
+
+                <div class="d-flex flex-column gap-3 mt-4 text-white-50" style="font-size: 0.9rem;">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-shield-check text-info"></i>
+                        <span>Role-Based Access Control (Admin / Faculty / Student)</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-graph-up-arrow text-success"></i>
+                        <span>Live Attendance Analytics & Low Attendance Warnings (&lt;75%)</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-lock-fill text-warning"></i>
+                        <span>Audit-Trail Protected & Duplicate Record Prevention</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-4 border-top border-white border-opacity-10 text-white-50" style="font-size: 0.8rem;">
+                B.Tech Computer Science Semester Project &copy; 2026. All rights reserved.
+            </div>
+        </div>
+
+        <!-- Right Form Panel -->
+        <div class="login-right-panel">
+            <div class="mb-4">
+                <h4 class="fw-bold mb-1">Sign in to your account</h4>
+                <p class="text-muted" style="font-size: 0.9rem;">Enter your institutional credentials to access your portal</p>
+            </div>
+
+            <form asp-action="Login" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="ReturnUrl" />
+
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 px-3 small border-0 mb-3" style="border-radius: var(--radius-sm);" role="alert"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label fw-semibold small text-secondary"></label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-envelope"></i></span>
+                        <input asp-for="Email" class="form-control border-start-0 ps-0" placeholder="name@smartattendance.edu" autocomplete="email" required />
+                    </div>
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <label asp-for="Password" class="form-label fw-semibold small text-secondary"></label>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-key"></i></span>
+                        <input asp-for="Password" type="password" class="form-control border-start-0 ps-0" placeholder="••••••••" autocomplete="current-password" required />
+                    </div>
+                    <span asp-validation-for="Password" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-4 form-check">
+                    <input asp-for="RememberMe" class="form-check-input" />
+                    <label asp-for="RememberMe" class="form-check-label small text-secondary"></label>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold d-flex align-items-center justify-content-center gap-2" style="background: var(--primary-700); border: none; border-radius: var(--radius-sm);">
+                    <i class="bi bi-box-arrow-in-right"></i> Sign In to Portal
+                </button>
+            </form>
+
+            <!-- Quick Demo Login Helpers for Viva / Evaluation -->
+            <div class="mt-4 pt-4 border-top">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-uppercase fw-bold text-muted" style="font-size: 0.72rem; letter-spacing: 0.05em;">Quick Demo Fillers</span>
+                    <span class="badge bg-light text-dark border font-monospace">Click to Auto-Fill</span>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <div class="demo-account-pill d-flex align-items-center justify-content-between" onclick="fillLogin('admin@smartattendance.edu', 'Admin@123')">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-danger">ADMIN</span>
+                            <span class="fw-semibold text-dark">System Administrator</span>
+                        </div>
+                        <small class="text-muted font-monospace">Admin@123</small>
+                    </div>
+
+                    <div class="demo-account-pill d-flex align-items-center justify-content-between" onclick="fillLogin('faculty.sharma@smartattendance.edu', 'Faculty@123')">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-primary">FACULTY</span>
+                            <span class="fw-semibold text-dark">Dr. Rajesh Sharma (HOD)</span>
+                        </div>
+                        <small class="text-muted font-monospace">Faculty@123</small>
+                    </div>
+
+                    <div class="demo-account-pill d-flex align-items-center justify-content-between" onclick="fillLogin('student.rahul@smartattendance.edu', 'Student@123')">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-success">STUDENT</span>
+                            <span class="fw-semibold text-dark">Rahul Kumar (&gt;85% Attendance)</span>
+                        </div>
+                        <small class="text-muted font-monospace">Student@123</small>
+                    </div>
+
+                    <div class="demo-account-pill d-flex align-items-center justify-content-between" onclick="fillLogin('student.rohit@smartattendance.edu', 'Student@123')">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-warning text-dark">STUDENT</span>
+                            <span class="fw-semibold text-dark">Rohit Verma (&lt;75% Defaulter Alert)</span>
+                        </div>
+                        <small class="text-muted font-monospace">Student@123</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

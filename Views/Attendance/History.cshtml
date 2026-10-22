@@ -1,0 +1,191 @@
+@model SmartAttendance.ViewModels.Attendance.AttendanceHistoryViewModel
+@{
+    ViewData["Title"] = "Attendance History";
+}
+
+<!-- Page Header & Export Controls -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h3 class="fw-bold mb-1">Attendance History & Audit Logs</h3>
+        <p class="text-muted mb-0 small">Search and review verified attendance logs across all academic sessions.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-controller="Reports" asp-action="ExportAttendanceCsv" 
+           asp-route-classSectionId="@Model.ClassSectionId"
+           asp-route-subjectId="@Model.SubjectId"
+           asp-route-startDate="@(Model.StartDate?.ToString("yyyy-MM-dd"))"
+           asp-route-endDate="@(Model.EndDate?.ToString("yyyy-MM-dd"))"
+           class="btn btn-outline-success bg-white d-flex align-items-center gap-2">
+            <i class="bi bi-file-earmark-excel"></i> Export CSV
+        </a>
+        <a asp-action="Mark" class="btn btn-primary d-flex align-items-center gap-2" style="background: var(--primary-700); border: none;">
+            <i class="bi bi-plus-circle"></i> Mark Attendance
+        </a>
+    </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="dashboard-card p-4 mb-4">
+    <form method="get" asp-action="History">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label fw-semibold small text-secondary">Search</label>
+                <input type="text" name="SearchTerm" class="form-control" placeholder="Roll No, Student, Subject..." value="@Model.SearchTerm" />
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label fw-semibold small text-secondary">Class Section</label>
+                <select name="ClassSectionId" class="form-select" asp-items="ViewBag.ClassSections">
+                    <option value="">All Sections</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label fw-semibold small text-secondary">Subject</label>
+                <select name="SubjectId" class="form-select" asp-items="ViewBag.Subjects">
+                    <option value="">All Subjects</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label fw-semibold small text-secondary">From Date</label>
+                <input type="date" name="StartDate" class="form-control" value="@(Model.StartDate?.ToString("yyyy-MM-dd"))" />
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label fw-semibold small text-secondary">To Date</label>
+                <input type="date" name="EndDate" class="form-control" value="@(Model.EndDate?.ToString("yyyy-MM-dd"))" />
+            </div>
+
+            <div class="col-md-1 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100" style="background: var(--primary-700); border: none;" title="Apply Filters">
+                    <i class="bi bi-funnel-fill"></i>
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Records Table -->
+<div class="custom-table-container mb-4">
+    <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light">
+        <div class="fw-semibold text-secondary small">
+            Found <strong>@Model.TotalRecords</strong> logged records
+        </div>
+        <div class="small text-muted">
+            Page @Model.CurrentPage of @(Model.TotalPages > 0 ? Model.TotalPages : 1)
+        </div>
+    </div>
+
+    @if (Model.Records.Any())
+    {
+        <div class="table-responsive">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Student</th>
+                        <th>Subject</th>
+                        <th>Section</th>
+                        <th>Status</th>
+                        <th>Remarks</th>
+                        <th>Audit Info</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.Records)
+                    {
+                        <tr>
+                            <td class="fw-semibold text-nowrap">
+                                @r.Date.ToString("dd MMM yyyy")
+                            </td>
+                            <td>
+                                <div class="fw-bold">@r.StudentName</div>
+                                <div class="font-monospace text-muted small">@r.StudentRollNumber</div>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border font-monospace">@r.SubjectCode</span>
+                                <div class="small text-secondary">@r.SubjectName</div>
+                            </td>
+                            <td>@r.ClassSectionName</td>
+                            <td>
+                                @if (r.Status == SmartAttendance.Models.AttendanceStatus.Present)
+                                {
+                                    <span class="status-badge status-badge-present">
+                                        <i class="bi bi-check-circle-fill"></i> Present
+                                    </span>
+                                }
+                                else if (r.Status == SmartAttendance.Models.AttendanceStatus.Absent)
+                                {
+                                    <span class="status-badge status-badge-absent">
+                                        <i class="bi bi-x-circle-fill"></i> Absent
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-badge-late">
+                                        <i class="bi bi-clock-fill"></i> Late
+                                    </span>
+                                }
+                            </td>
+                            <td class="small text-muted">
+                                @(string.IsNullOrEmpty(r.Remarks) ? "-" : r.Remarks)
+                            </td>
+                            <td class="small text-muted">
+                                <div>By @r.RecordedByFaculty</div>
+                                <div style="font-size: 0.72rem;">@r.CreatedAt.ToString("g")</div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-search text-muted fs-2"></i>
+            <h6 class="fw-bold mt-2">No Attendance Records Match Filters</h6>
+            <p class="text-muted small">Try broadening your search query or date range.</p>
+        </div>
+    }
+</div>
+
+<!-- Pagination Controls -->
+@if (Model.TotalPages > 1)
+{
+    <nav aria-label="Page navigation" class="d-flex justify-content-center">
+        <ul class="pagination">
+            <li class="page-item @(Model.CurrentPage <= 1 ? "disabled" : "")">
+                <a class="page-link" asp-action="History" 
+                   asp-route-CurrentPage="@(Model.CurrentPage - 1)"
+                   asp-route-ClassSectionId="@Model.ClassSectionId"
+                   asp-route-SubjectId="@Model.SubjectId"
+                   asp-route-SearchTerm="@Model.SearchTerm"
+                   asp-route-StartDate="@(Model.StartDate?.ToString("yyyy-MM-dd"))"
+                   asp-route-EndDate="@(Model.EndDate?.ToString("yyyy-MM-dd"))">Previous</a>
+            </li>
+            @for (int p = 1; p <= Model.TotalPages; p++)
+            {
+                <li class="page-item @(p == Model.CurrentPage ? "active" : "")">
+                    <a class="page-link" asp-action="History" 
+                       asp-route-CurrentPage="@p"
+                       asp-route-ClassSectionId="@Model.ClassSectionId"
+                       asp-route-SubjectId="@Model.SubjectId"
+                       asp-route-SearchTerm="@Model.SearchTerm"
+                       asp-route-StartDate="@(Model.StartDate?.ToString("yyyy-MM-dd"))"
+                       asp-route-EndDate="@(Model.EndDate?.ToString("yyyy-MM-dd"))">@p</a>
+                </li>
+            }
+            <li class="page-item @(Model.CurrentPage >= Model.TotalPages ? "disabled" : "")">
+                <a class="page-link" asp-action="History" 
+                   asp-route-CurrentPage="@(Model.CurrentPage + 1)"
+                   asp-route-ClassSectionId="@Model.ClassSectionId"
+                   asp-route-SubjectId="@Model.SubjectId"
+                   asp-route-SearchTerm="@Model.SearchTerm"
+                   asp-route-StartDate="@(Model.StartDate?.ToString("yyyy-MM-dd"))"
+                   asp-route-EndDate="@(Model.EndDate?.ToString("yyyy-MM-dd"))">Next</a>
+            </li>
+        </ul>
+    </nav>
+}

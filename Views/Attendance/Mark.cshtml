@@ -1,0 +1,145 @@
+@model SmartAttendance.ViewModels.Attendance.MarkAttendanceViewModel
+@{
+    ViewData["Title"] = "Mark Attendance";
+}
+
+<!-- Page Header -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h3 class="fw-bold mb-1">Take / Update Class Attendance</h3>
+        <p class="text-muted mb-0 small">Select section, subject, and session date to record attendance records.</p>
+    </div>
+    <div>
+        <a asp-action="History" class="btn btn-outline-secondary bg-white">
+            <i class="bi bi-clock-history"></i> View Past History
+        </a>
+    </div>
+</div>
+
+<!-- Selection Filter Card -->
+<div class="dashboard-card p-4 mb-4">
+    <form id="filterForm" method="get" asp-action="Mark">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label fw-semibold small text-secondary">Class Section</label>
+                <select id="selectSection" name="classSectionId" class="form-select" asp-items="ViewBag.ClassSections" required>
+                    <option value="">-- Choose Class Section --</option>
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label fw-semibold small text-secondary">Subject / Course</label>
+                <select id="selectSubject" name="subjectId" class="form-select" asp-items="ViewBag.Subjects" required>
+                    <option value="">-- Choose Subject --</option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label fw-semibold small text-secondary">Attendance Date</label>
+                <input id="selectDate" name="date" type="date" class="form-control" value="@Model.Date.ToString("yyyy-MM-dd")" required />
+            </div>
+
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary w-100 fw-semibold" style="background: var(--primary-700); border: none;" title="Load Sheet">
+                    <i class="bi bi-arrow-right-short fs-5"></i>
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Attendance Sheet Container -->
+<div id="sheetContainer">
+    @if (Model.ClassSectionId > 0 && Model.SubjectId > 0)
+    {
+        @await Html.PartialAsync("_AttendanceSheetPartial", Model)
+    }
+    else
+    {
+        <div class="text-center py-5 dashboard-card">
+            <i class="bi bi-card-checklist text-primary fs-1"></i>
+            <h5 class="fw-bold mt-3 mb-1">Select Class Details Above</h5>
+            <p class="text-muted small">Please select a Class Section and Subject from the menu above to generate the attendance roster.</p>
+        </div>
+    }
+</div>
+
+<!-- AntiForgery Token for AJAX -->
+@Html.AntiForgeryToken()
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            bindAttendanceSubmit();
+            updateAttendanceCounters();
+        });
+
+        function bindAttendanceSubmit() {
+            const btn = document.getElementById("btnSubmitAttendance");
+            if (!btn) return;
+
+            btn.addEventListener("click", async function () {
+                const sectionId = document.getElementById("selectSection").value;
+                const subjectId = document.getElementById("selectSubject").value;
+                const dateVal = document.getElementById("selectDate").value;
+
+                if (!sectionId || !subjectId || !dateVal) {
+                    alert("Please select Class Section, Subject, and Date.");
+                    return;
+                }
+
+                // Gather student attendance statuses
+                const rows = document.querySelectorAll("#studentAttendanceRows tr");
+                const students = [];
+
+                rows.forEach(row => {
+                    const studentId = parseInt(row.getAttribute("data-student-id"));
+                    const checkedRadio = row.querySelector(`input[name="status_${studentId}"]:checked`);
+                    const remarks = row.querySelector(".remarks-input").value;
+
+                    students.push({
+                        studentId: studentId,
+                        status: checkedRadio ? parseInt(checkedRadio.value) : 1,
+                        remarks: remarks ? remarks.trim() : null
+                    });
+                });
+
+                const payload = {
+                    classSectionId: parseInt(sectionId),
+                    subjectId: parseInt(subjectId),
+                    date: dateVal,
+                    students: students
+                };
+
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+
+                try {
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                    const response = await fetch('@Url.Action("SaveAttendance", "Attendance")', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': token
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const res = await response.json();
+                    if (res.success) {
+                        alert(res.message);
+                        window.location.reload();
+                    } else {
+                        alert("Error: " + res.message);
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bi bi-cloud-arrow-up-fill"></i> Save & Submit Attendance';
+                    }
+                } catch (err) {
+                    alert("Failed to submit attendance: " + err.message);
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-cloud-arrow-up-fill"></i> Save & Submit Attendance';
+                }
+            });
+        }
+    </script>
+}

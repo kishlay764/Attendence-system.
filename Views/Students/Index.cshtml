@@ -1,0 +1,121 @@
+@model IEnumerable<SmartAttendance.Models.Student>
+@{
+    ViewData["Title"] = "Student Directory";
+}
+
+<!-- Page Header -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h3 class="fw-bold mb-1">Student Management</h3>
+        <p class="text-muted mb-0 small">Manage undergraduate student profiles, enrollments, and login accounts.</p>
+    </div>
+    <div>
+        <a asp-action="Create" class="btn btn-primary d-flex align-items-center gap-2" style="background: var(--primary-700); border: none;">
+            <i class="bi bi-person-plus-fill"></i> Add New Student
+        </a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="dashboard-card p-4 mb-4">
+    <form method="get" asp-action="Index">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label fw-semibold small text-secondary">Search Students</label>
+                <input type="text" name="search" class="form-control" placeholder="Search by name, roll no, email..." value="@ViewBag.Search" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold small text-secondary">Course</label>
+                <select name="courseId" class="form-select" asp-items="ViewBag.Courses">
+                    <option value="">All Courses</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold small text-secondary">Class Section</label>
+                <select name="classSectionId" class="form-select" asp-items="ViewBag.ClassSections">
+                    <option value="">All Sections</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary w-100" style="background: var(--primary-700); border: none;">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Students Table -->
+<div class="custom-table-container">
+    <div class="table-responsive">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Roll Number</th>
+                    <th>Student Name</th>
+                    <th>Course & Section</th>
+                    <th>Institutional Email</th>
+                    <th>Semester</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Any())
+                {
+                    @foreach (var s in Model)
+                    {
+                        <tr>
+                            <td class="fw-bold font-monospace text-primary">@s.RollNumber</td>
+                            <td>
+                                <div class="fw-bold">@s.FullName</div>
+                                <div class="text-muted small">Reg: @s.RegistrationNumber</div>
+                            </td>
+                            <td>
+                                <div>@(s.Course?.Code ?? "Course")</div>
+                                <span class="badge bg-light text-dark border">@(s.ClassSection?.Name ?? "Unassigned")</span>
+                            </td>
+                            <td class="small">@s.Email</td>
+                            <td class="fw-semibold">Sem @s.CurrentSemester</td>
+                            <td>
+                                @if (s.IsActive)
+                                {
+                                    <span class="badge bg-success bg-opacity-15 text-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Inactive</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <a asp-action="Details" asp-route-id="@s.Id" class="btn btn-outline-secondary" title="View Profile & Stats">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a asp-action="Edit" asp-route-id="@s.Id" class="btn btn-outline-primary" title="Edit Student">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form asp-action="Delete" asp-route-id="@s.Id" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this student and their account?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-outline-danger" title="Delete Student">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="bi bi-people fs-2"></i>
+                            <p class="mt-2 mb-0">No students found matching your criteria.</p>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

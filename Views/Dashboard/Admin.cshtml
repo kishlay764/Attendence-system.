@@ -1,0 +1,325 @@
+@model SmartAttendance.ViewModels.Dashboard.AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Admin Overview";
+}
+
+<!-- Welcome & Quick Actions Bar -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h3 class="fw-bold mb-1">Institutional Dashboard</h3>
+        <p class="text-muted mb-0 small">Welcome to the central academic and attendance control center.</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a asp-controller="Attendance" asp-action="Mark" class="quick-action-btn quick-action-primary">
+            <i class="bi bi-plus-circle"></i> Mark Attendance
+        </a>
+        <a asp-controller="Reports" asp-action="LowAttendance" class="quick-action-btn btn btn-outline-danger bg-white">
+            <i class="bi bi-exclamation-triangle"></i> View Defaulters (@Model.LowAttendanceStudentsCount)
+        </a>
+        <a asp-controller="Reports" asp-action="Daily" class="quick-action-btn btn btn-outline-secondary bg-white">
+            <i class="bi bi-file-earmark-bar-graph"></i> Daily Reports
+        </a>
+    </div>
+</div>
+
+<!-- Primary Metric Stat Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-icon-wrapper stat-icon-blue">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-label">Total Students</div>
+                <div class="stat-value">@Model.TotalStudents</div>
+                <div class="stat-subtitle text-muted">Active enrollments</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-icon-wrapper stat-icon-cyan">
+                <i class="bi bi-person-badge-fill"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-label">Teaching Faculty</div>
+                <div class="stat-value">@Model.TotalFaculty</div>
+                <div class="stat-subtitle text-muted">Across departments</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-icon-wrapper stat-icon-green">
+                <i class="bi bi-check2-circle"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-label">Overall Attendance</div>
+                <div class="stat-value">@Model.OverallAttendancePercentage%</div>
+                <div class="stat-subtitle text-muted">Institutional average</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-icon-wrapper stat-icon-red">
+                <i class="bi bi-exclamation-octagon-fill"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-label">Below 75% Alert</div>
+                <div class="stat-value text-danger">@Model.LowAttendanceStudentsCount</div>
+                <div class="stat-subtitle text-muted">Students requiring warning</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Secondary Stats Row -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="dashboard-card p-3 d-flex align-items-center justify-content-between">
+            <div>
+                <span class="text-muted small fw-semibold">Class Sections Active</span>
+                <h4 class="fw-bold mb-0">@Model.TotalClassSections</h4>
+            </div>
+            <i class="bi bi-grid-3x3-gap text-primary fs-3"></i>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dashboard-card p-3 d-flex align-items-center justify-content-between">
+            <div>
+                <span class="text-muted small fw-semibold">Curriculum Subjects</span>
+                <h4 class="fw-bold mb-0">@Model.TotalSubjects</h4>
+            </div>
+            <i class="bi bi-book text-info fs-3"></i>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dashboard-card p-3 d-flex align-items-center justify-content-between">
+            <div>
+                <span class="text-muted small fw-semibold">Recorded Today</span>
+                <h4 class="fw-bold mb-0">@Model.TodaySessionsRecorded Sessions</h4>
+            </div>
+            <i class="bi bi-calendar2-check text-success fs-3"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Interactive Charts Row -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="dashboard-card p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0">Attendance Trend (Recent Recorded Days)</h5>
+                <span class="badge bg-light text-secondary border">Percentage %</span>
+            </div>
+            <div style="height: 280px; position: relative;">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="dashboard-card p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0">Subject Performance</h5>
+                <span class="badge bg-light text-secondary border">Avg %</span>
+            </div>
+            <div style="height: 280px; position: relative;">
+                <canvas id="subjectChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Activity Feed & Defaulters Row -->
+<div class="row g-4">
+    <!-- Recent Attendance Activity Feed -->
+    <div class="col-lg-7">
+        <div class="dashboard-card p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0">Recent Attendance Submissions</h5>
+                <a asp-controller="Attendance" asp-action="History" class="small text-primary text-decoration-none fw-semibold">
+                    View Complete Log &rarr;
+                </a>
+            </div>
+
+            @if (Model.RecentActivities.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 small">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date / Session</th>
+                                <th>Class & Faculty</th>
+                                <th>Attendance Breakdown</th>
+                                <th class="text-end">Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.RecentActivities)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold">@item.SubjectCode - @item.SubjectName</div>
+                                        <div class="text-muted" style="font-size: 0.75rem;">@item.Date.ToString("ddd, dd MMM yyyy")</div>
+                                    </td>
+                                    <td>
+                                        <div>@item.ClassSection</div>
+                                        <div class="text-muted" style="font-size: 0.75rem;">@item.FacultyName</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success bg-opacity-10 text-success me-1">@item.PresentCount P</span>
+                                        <span class="badge bg-danger bg-opacity-10 text-danger me-1">@item.AbsentCount A</span>
+                                        <span class="badge bg-warning bg-opacity-10 text-warning">@item.LateCount L</span>
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="pct-badge @(item.Percentage >= 75 ? "pct-safe" : "pct-danger")">
+                                            @item.Percentage%
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-inbox fs-2"></i>
+                    <p class="mt-2 mb-0">No recent attendance sessions logged.</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Top Attendance Defaulters (< 75%) -->
+    <div class="col-lg-5">
+        <div class="dashboard-card p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="fw-bold mb-0 text-danger d-flex align-items-center gap-2">
+                        <i class="bi bi-shield-exclamation"></i> Critical Defaulters
+                    </h5>
+                    <small class="text-muted">Attendance below 75% threshold</small>
+                </div>
+                <a asp-controller="Reports" asp-action="LowAttendance" class="btn btn-sm btn-outline-danger">
+                    All Defaulters
+                </a>
+            </div>
+
+            @if (Model.TopDefaulters.Any())
+            {
+                <div class="list-group list-group-flush">
+                    @foreach (var d in Model.TopDefaulters)
+                    {
+                        <div class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-bold" style="font-size: 0.9rem;">@d.StudentName</div>
+                                <div class="text-muted font-monospace" style="font-size: 0.75rem;">@d.RollNumber • @d.ClassSection</div>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-danger fs-6 px-2 py-1">@d.AttendancePercentage%</span>
+                                <div class="text-muted" style="font-size: 0.75rem;">@d.AttendedSessions / @d.TotalSessions sessions</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-4 text-success">
+                    <i class="bi bi-check-circle fs-2"></i>
+                    <p class="mt-2 mb-0 fw-semibold">Excellent! All students are currently above 75% attendance.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Trend Chart
+            const trendCtx = document.getElementById('trendChart');
+            if (trendCtx) {
+                const dates = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TrendDates));
+                const values = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TrendPercentages));
+
+                new Chart(trendCtx, {
+                    type: 'line',
+                    data: {
+                        labels: dates.length ? dates : ['No Data'],
+                        datasets: [{
+                            label: 'Overall Attendance Rate (%)',
+                            data: values.length ? values : [0],
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.08)',
+                            borderWidth: 2.5,
+                            fill: true,
+                            tension: 0.35,
+                            pointBackgroundColor: '#1d4ed8',
+                            pointRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                min: 40,
+                                max: 100,
+                                ticks: {
+                                    callback: function(val) { return val + '%'; }
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+            }
+
+            // Subject Bar Chart
+            const subCtx = document.getElementById('subjectChart');
+            if (subCtx) {
+                const subLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SubjectLabels));
+                const subValues = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SubjectAverages));
+
+                new Chart(subCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: subLabels.length ? subLabels : ['None'],
+                        datasets: [{
+                            label: 'Avg Attendance %',
+                            data: subValues.length ? subValues : [0],
+                            backgroundColor: '#3b82f6',
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                min: 0,
+                                max: 100,
+                                ticks: {
+                                    callback: function(val) { return val + '%'; }
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+}

@@ -1,0 +1,123 @@
+@model SmartAttendance.ViewModels.Account.ProfileViewModel
+@{
+    ViewData["Title"] = "User Profile & Security";
+}
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="dashboard-card p-4 text-center">
+            <div class="user-avatar-circle mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2rem;">
+                @(Model.FullName.Length > 0 ? Model.FullName[0].ToString() : "U")
+            </div>
+            <h4 class="fw-bold mb-1">@Model.FullName</h4>
+            <div class="mb-3">
+                <span class="role-badge role-badge-@Model.Role">@Model.Role Profile</span>
+            </div>
+            <p class="text-muted small mb-4">Member of Smart Attendance System since @Model.MemberSince.ToString("MMMM yyyy")</p>
+
+            <div class="list-group list-group-flush text-start small border-top">
+                @if (!string.IsNullOrEmpty(Model.Identifier))
+                {
+                    <div class="list-group-item px-0 d-flex justify-content-between py-2">
+                        <span class="text-muted">ID / Roll No:</span>
+                        <span class="fw-semibold font-monospace">@Model.Identifier</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Model.Department))
+                {
+                    <div class="list-group-item px-0 d-flex justify-content-between py-2">
+                        <span class="text-muted">Department:</span>
+                        <span class="fw-semibold">@Model.Department</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Model.Designation))
+                {
+                    <div class="list-group-item px-0 d-flex justify-content-between py-2">
+                        <span class="text-muted">Designation:</span>
+                        <span class="fw-semibold">@Model.Designation</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Model.CourseName))
+                {
+                    <div class="list-group-item px-0 d-flex justify-content-between py-2">
+                        <span class="text-muted">Enrolled Degree:</span>
+                        <span class="fw-semibold">@Model.CourseName</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Model.ClassSectionName))
+                {
+                    <div class="list-group-item px-0 d-flex justify-content-between py-2">
+                        <span class="text-muted">Current Class:</span>
+                        <span class="fw-semibold">@Model.ClassSectionName (Sem @Model.CurrentSemester)</span>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <!-- Edit Profile Information -->
+        <div class="dashboard-card p-4 mb-4">
+            <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                <i class="bi bi-person-lines-fill text-primary"></i> Personal Details
+            </h5>
+            <form asp-action="Profile" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="UserId" />
+                <input type="hidden" asp-for="Role" />
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="FullName" class="form-label fw-semibold small text-secondary"></label>
+                        <input asp-for="FullName" class="form-control" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Email" class="form-label fw-semibold small text-secondary"></label>
+                        <input asp-for="Email" class="form-control bg-light" readonly />
+                        <small class="text-muted">Email cannot be modified directly</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="PhoneNumber" class="form-label fw-semibold small text-secondary"></label>
+                        <input asp-for="PhoneNumber" class="form-control" placeholder="+91 98765 43210" />
+                    </div>
+                </div>
+
+                <div class="mt-4 text-end">
+                    <button type="submit" class="btn btn-primary px-4 fw-semibold" style="background: var(--primary-700); border: none;">
+                        <i class="bi bi-check-lg"></i> Update Profile
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Change Password Section -->
+        <div class="dashboard-card p-4">
+            <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                <i class="bi bi-shield-lock-fill text-warning"></i> Change Password
+            </h5>
+            <form asp-action="ChangePassword" method="post">
+                @Html.AntiForgeryToken()
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <label class="form-label fw-semibold small text-secondary">Current Password</label>
+                        <input name="OldPassword" type="password" class="form-control" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small text-secondary">New Password</label>
+                        <input name="NewPassword" type="password" class="form-control" required minlength="6" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small text-secondary">Confirm New Password</label>
+                        <input name="ConfirmPassword" type="password" class="form-control" required minlength="6" />
+                    </div>
+                </div>
+
+                <div class="mt-4 text-end">
+                    <button type="submit" class="btn btn-outline-primary px-4 fw-semibold">
+                        <i class="bi bi-key-fill"></i> Change Password
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
