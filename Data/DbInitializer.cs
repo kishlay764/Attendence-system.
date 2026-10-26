@@ -221,11 +221,11 @@ namespace SmartAttendance.Data
             // 9. Seed Students
             var studentSeedData = new[]
             {
-                new { Email = "student.rahul@smartattendance.edu", Roll = "26BCSE01", Reg = "REG2026001", First = "Rahul", Last = "Kumar", Gender = "Male" },
+                new { Email = "student.rahul@smartattendance.edu", Roll = "26BCSE01", Reg = "REG2026001", First = "Kishlay", Last = "Kumar", Gender = "Male" },
                 new { Email = "student.priya@smartattendance.edu", Roll = "26BCSE02", Reg = "REG2026002", First = "Priya", Last = "Singh", Gender = "Female" },
                 new { Email = "student.amit@smartattendance.edu", Roll = "26BCSE03", Reg = "REG2026003", First = "Amit", Last = "Patel", Gender = "Male" },
                 new { Email = "student.neha@smartattendance.edu", Roll = "26BCSE04", Reg = "REG2026004", First = "Neha", Last = "Gupta", Gender = "Female" },
-                new { Email = "student.rohit@smartattendance.edu", Roll = "26BCSE05", Reg = "REG2026005", First = "Rohit", Last = "Verma", Gender = "Male" }, // Will have low attendance
+                new { Email = "student.rohit@smartattendance.edu", Roll = "26BCSE05", Reg = "REG2026005", First = "Ujjwal", Last = "Singh", Gender = "Male" }, // Will have low attendance
                 new { Email = "student.ananya@smartattendance.edu", Roll = "26BCSE06", Reg = "REG2026006", First = "Ananya", Last = "Roy", Gender = "Female" },
                 new { Email = "student.suresh@smartattendance.edu", Roll = "26BCSE07", Reg = "REG2026007", First = "Suresh", Last = "Menon", Gender = "Male" },
                 new { Email = "student.sneha@smartattendance.edu", Roll = "26BCSE08", Reg = "REG2026008", First = "Sneha", Last = "Reddy", Gender = "Female" } // Will have low attendance

@@ -99,7 +99,10 @@ else
 
 app.UseStatusCodePagesWithReExecute("/Home/Error", "?statusCode={0}");
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 app.UseStaticFiles();
 
 app.UseRouting();
